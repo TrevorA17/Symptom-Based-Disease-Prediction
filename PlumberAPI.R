@@ -1,35 +1,35 @@
 # plumber_nb_api.R
 
-# Load necessary libraries
+# Load libraries
 library(plumber)
-library(caret)
-library(e1071) # for Naive Bayes if needed
+library(e1071) # Naive Bayes
 
 # Load the saved Naive Bayes model
 loaded_nb_model <- readRDS("./models/saved_nb_model.rds")
 
-# Load your original training data (needed for column structure)
-train_data <- readRDS("./models/training_data.rds")
+# Load model metadata (column names, types, levels)
+model_metadata <- readRDS("./models/model_metadata.rds")
 
-# Helper function to align incoming data with training structure
-prepare_new_data <- function(new_data, training_data) {
-  # Remove label column
-  train_features <- training_data[, setdiff(names(training_data), "label")]
-  
-  # Add missing columns as NA
-  for (col in names(train_features)) {
+# API Info
+#* @apiTitle Symptom-Based Naive Bayes Prediction API
+#* @apiDescription Predicts disease likelihood based on symptoms.
+
+# Helper function to prepare incoming data
+prepare_new_data <- function(new_data, metadata) {
+  # Ensure all expected columns exist
+  for (col in metadata$columns) {
     if (!col %in% names(new_data)) {
       new_data[[col]] <- NA
     }
   }
   
-  # Reorder columns
-  new_data <- new_data[, names(train_features)]
+  # Reorder columns to match training
+  new_data <- new_data[, metadata$columns, drop = FALSE]
   
-  # Match types
-  for (col in names(train_features)) {
-    if (is.factor(train_features[[col]])) {
-      new_data[[col]] <- factor(new_data[[col]], levels = levels(train_features[[col]]))
+  # Match data types
+  for (col in metadata$columns) {
+    if (metadata$types[[col]] == "factor") {
+      new_data[[col]] <- factor(new_data[[col]], levels = metadata$levels[[col]])
     } else {
       new_data[[col]] <- as.numeric(new_data[[col]])
     }
@@ -38,8 +38,6 @@ prepare_new_data <- function(new_data, training_data) {
   return(new_data)
 }
 
-#* Predict using Naive Bayes model
-#* @post /predict
 #* @param fever Numeric (0 or 1)
 #* @param cough Numeric (0 or 1)
 #* @param headache Numeric (0 or 1)
@@ -55,14 +53,16 @@ prepare_new_data <- function(new_data, training_data) {
 #* @param sweating Numeric (0 or 1)
 #* @param rapid_breathing Numeric (0 or 1)
 #* @param dizziness Numeric (0 or 1)
-#* @response 200 Returns predicted class
+
+#* @get /predict
 predict_symptoms <- function(
     fever, cough, headache, nausea, vomiting, fatigue,
     sore_throat, chills, body_pain, loss_of_appetite,
     abdominal_pain, diarrhea, sweating, rapid_breathing, dizziness
 ) {
-  # Create dataframe from inputs
-  new_data <- data.frame(
+  
+  # Create data frame from inputs
+  to_be_predicted <- data.frame(
     fever = as.numeric(fever),
     cough = as.numeric(cough),
     headache = as.numeric(headache),
@@ -80,12 +80,12 @@ predict_symptoms <- function(
     dizziness = as.numeric(dizziness)
   )
   
-  # Align new data
-  new_data_ready <- prepare_new_data(new_data, train_data)
+  # Align incoming data to match model training structure
+  to_be_predicted_ready <- prepare_new_data(to_be_predicted, model_metadata)
   
-  # Predict
-  prediction <- predict(loaded_nb_model, newdata = new_data_ready)
+  # Predict using the Naive Bayes model
+  prediction <- predict(loaded_nb_model, newdata = to_be_predicted_ready)
   
-  # Return prediction
+  # Return prediction as plain text
   return(list(prediction = as.character(prediction)))
 }

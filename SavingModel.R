@@ -8,7 +8,7 @@ repo_path <- dirname(rstudioapi::getActiveDocumentContext()$path)
 saveRDS(model_nb, file.path(repo_path, "models", "saved_nb_model.rds"))
 
 # Load the saved Naive Bayes model (when needed)
-loaded_nb_model <- readRDS("./models/saved_nb_model.rds")
+loaded_nb_model <- readRDS(file.path(repo_path, "models", "saved_nb_model.rds"))
 
 # Helper function to align new data to training data structure
 prepare_new_data <- function(new_data, training_data) {
@@ -62,3 +62,17 @@ new_data_ready <- prepare_new_data(new_data_input, train_data)
 # Predict
 predictions <- predict(loaded_nb_model, newdata = new_data_ready)
 print(predictions)
+
+
+
+# Save metadata about the training data
+metadata <- list(
+  columns = colnames(train_data),   # the names of columns used in training
+  types = sapply(train_data, class), # the class of each column
+  levels = lapply(train_data, function(col) {
+    if (is.factor(col)) levels(col) else NULL
+  })
+)
+
+saveRDS(metadata, file.path(repo_path, "models", "model_metadata.rds"))
+
