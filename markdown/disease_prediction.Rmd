@@ -52,3 +52,55 @@ The dataset that was used can be downloaded here: *\<https://www.kaggle.com/data
 Refer to the APA 7th edition manual for rules on how to cite datasets: <https://apastyle.apa.org/style-grammar-guidelines/references/examples/data-set-references>*
 
 # Exploratory Data Analysis
+## Load dataset
+```{r load dataset}
+# Load libraries
+library(tidyverse)
+
+# Choose and load dataset with correct column types
+file_path <- file.choose()
+
+SymptomData <- read.csv(file_path, colClasses = c(
+  fever = "factor",
+  cough = "factor",
+  headache = "factor",
+  nausea = "factor",
+  vomiting = "factor",
+  fatigue = "factor",
+  sore_throat = "factor",
+  chills = "factor",
+  body_pain = "factor",
+  loss_of_appetite = "factor",
+  abdominal_pain = "factor",
+  diarrhea = "factor",
+  sweating = "factor",
+  rapid_breathing = "factor",
+  dizziness = "factor",
+  label = "factor" # Target variable
+))
+
+# Quick check
+str(SymptomData)
+summary(SymptomData)
+
+# Frequency of each disease label
+table(SymptomData$label)
+```
+## Measures of Frequency
+```{r MOF}
+# Frequency of each disease label
+table(SymptomData$label)
+
+# Frequency of each symptom being present (1) or absent (0)
+symptom_freq <- sapply(SymptomData[ , -ncol(SymptomData)], function(col) table(col))
+symptom_freq
+```
+
+## Measures of Distribution
+## Measures of Relationship
+## Plots
+
+
+
+
+
