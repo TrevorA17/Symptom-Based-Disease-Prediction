@@ -60,3 +60,67 @@ cramers_v <- sapply(SymptomData[ , -ncol(SymptomData)], function(symptom) {
   CramerV(table(symptom, SymptomData$label))
 })
 cramers_v
+
+library(ggplot2)
+
+ggplot(SymptomData, aes(x = label)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Disease Distribution", x = "Disease", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Convert to numeric for counting
+symptom_numeric <- SymptomData %>%
+  mutate(across(-label, ~ as.numeric(as.character(.))))
+
+symptom_counts <- colSums(symptom_numeric[ , -ncol(symptom_numeric)] == 1)
+
+symptom_df <- data.frame(
+  Symptom = names(symptom_counts),
+  Count = as.numeric(symptom_counts)
+)
+
+ggplot(symptom_df, aes(x = reorder(Symptom, -Count), y = Count)) +
+  geom_bar(stat = "identity", fill = "darkorange") +
+  coord_flip() +
+  labs(title = "Symptom Frequency", x = "Symptom", y = "Count")
+
+# Example: Fever vs Disease
+ggplot(SymptomData, aes(x = label, fill = fever)) +
+  geom_bar(position = "fill") +
+  labs(title = "Proportion of Fever Presence by Disease",
+       y = "Proportion") +
+  scale_fill_manual(values = c("0" = "lightgray", "1" = "red"))
+# Choose a few symptoms to display
+selected_symptoms <- c("fever", "cough", "headache")
+
+SymptomData %>%
+  pivot_longer(cols = all_of(selected_symptoms), names_to = "Symptom", values_to = "Value") %>%
+  ggplot(aes(x = label, fill = Value)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ Symptom) +
+  labs(title = "Symptom Presence by Disease", y = "Proportion") +
+  scale_fill_manual(values = c("0" = "lightgray", "1" = "darkgreen"))
+
+library(tidyverse)
+
+label_col <- "label"
+
+# Convert symptom columns to numeric (keep label as factor)
+symptom_numeric <- SymptomData %>%
+  mutate(across(setdiff(names(SymptomData), label_col), ~ as.numeric(as.character(.))))
+
+# Group by label and calculate mean (proportion of '1's)
+symptom_summary <- symptom_numeric %>%
+  group_by(.data[[label_col]]) %>%
+  summarise(across(setdiff(names(symptom_numeric), label_col), mean), .groups = "drop") %>%
+  pivot_longer(-.data[[label_col]], names_to = "Symptom", values_to = "Proportion")
+
+# Heatmap
+ggplot(symptom_summary, aes(x = Symptom, y = .data[[label_col]], fill = Proportion)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Symptom Presence by Disease",
+       x = "Symptom",
+       y = "Disease",
+       fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
