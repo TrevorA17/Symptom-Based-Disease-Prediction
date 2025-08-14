@@ -12,6 +12,10 @@ Trevor Okinda
     - [Reference:](#reference)
 - [Exploratory Data Analysis](#exploratory-data-analysis)
   - [Load dataset](#load-dataset)
+  - [Measures of Frequency](#measures-of-frequency)
+  - [Measures of Distribution](#measures-of-distribution)
+  - [Measures of Relationship](#measures-of-relationship)
+  - [Plots](#plots)
 
 # Student Details
 
@@ -142,3 +146,210 @@ table(SymptomData$label)
     ## 
     ##   Malaria Pneumonia   Typhoid 
     ##      1666      1666      1666
+
+## Measures of Frequency
+
+``` r
+# Frequency of each disease label
+table(SymptomData$label)
+```
+
+    ## 
+    ##   Malaria Pneumonia   Typhoid 
+    ##      1666      1666      1666
+
+``` r
+# Frequency of each symptom being present (1) or absent (0)
+symptom_freq <- sapply(SymptomData[ , -ncol(SymptomData)], function(col) table(col))
+symptom_freq
+```
+
+    ##   fever cough headache nausea vomiting fatigue sore_throat chills body_pain
+    ## 0  1161  2313     1950   2968     3162    1676        3137   2338      2179
+    ## 1  3837  2685     3048   2030     1836    3322        1861   2660      2819
+    ##   loss_of_appetite abdominal_pain diarrhea sweating rapid_breathing dizziness
+    ## 0             2027           2696     3148     2007            2621      2807
+    ## 1             2971           2302     1850     2991            2377      2191
+
+## Measures of Distribution
+
+``` r
+# Convert factors to numeric (0/1) for calculation
+symptom_numeric <- SymptomData %>%
+  mutate(across(-label, ~ as.numeric(as.character(.))))
+
+# Mean presence of each symptom
+colMeans(symptom_numeric[ , -ncol(symptom_numeric)])
+```
+
+    ##            fever            cough         headache           nausea 
+    ##        0.7677071        0.5372149        0.6098439        0.4061625 
+    ##         vomiting          fatigue      sore_throat           chills 
+    ##        0.3673469        0.6646659        0.3723489        0.5322129 
+    ##        body_pain loss_of_appetite   abdominal_pain         diarrhea 
+    ##        0.5640256        0.5944378        0.4605842        0.3701481 
+    ##         sweating  rapid_breathing        dizziness 
+    ##        0.5984394        0.4755902        0.4383754
+
+``` r
+# Distribution for each symptom
+summary(symptom_numeric[ , -ncol(symptom_numeric)])
+```
+
+    ##      fever            cough           headache          nausea      
+    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+    ##  1st Qu.:1.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
+    ##  Median :1.0000   Median :1.0000   Median :1.0000   Median :0.0000  
+    ##  Mean   :0.7677   Mean   :0.5372   Mean   :0.6098   Mean   :0.4062  
+    ##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+    ##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+    ##     vomiting         fatigue        sore_throat         chills      
+    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+    ##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
+    ##  Median :0.0000   Median :1.0000   Median :0.0000   Median :1.0000  
+    ##  Mean   :0.3673   Mean   :0.6647   Mean   :0.3723   Mean   :0.5322  
+    ##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+    ##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+    ##    body_pain     loss_of_appetite abdominal_pain      diarrhea     
+    ##  Min.   :0.000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+    ##  1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
+    ##  Median :1.000   Median :1.0000   Median :0.0000   Median :0.0000  
+    ##  Mean   :0.564   Mean   :0.5944   Mean   :0.4606   Mean   :0.3701  
+    ##  3rd Qu.:1.000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+    ##  Max.   :1.000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+    ##     sweating      rapid_breathing    dizziness     
+    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+    ##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
+    ##  Median :1.0000   Median :0.0000   Median :0.0000  
+    ##  Mean   :0.5984   Mean   :0.4756   Mean   :0.4384  
+    ##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+    ##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000
+
+## Measures of Relationship
+
+``` r
+# Visual distribution for one example symptom
+library(ggplot2)
+ggplot(SymptomData, aes(x = fever)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Distribution of Fever Symptom")
+```
+
+![](disease_prediction_files/figure-gfm/MOR-1.png)<!-- -->
+
+``` r
+# Chi-square test for fever vs disease
+chisq.test(table(SymptomData$fever, SymptomData$label))
+```
+
+    ## 
+    ##  Pearson's Chi-squared test
+    ## 
+    ## data:  table(SymptomData$fever, SymptomData$label)
+    ## X-squared = 408.15, df = 2, p-value < 2.2e-16
+
+``` r
+# Cramér's V for all symptoms vs label
+library(DescTools)
+cramers_v <- sapply(SymptomData[ , -ncol(SymptomData)], function(symptom) {
+  CramerV(table(symptom, SymptomData$label))
+})
+cramers_v
+```
+
+    ##            fever            cough         headache           nausea 
+    ##        0.2857663        0.5354529        0.3260371        0.4520878 
+    ##         vomiting          fatigue      sore_throat           chills 
+    ##        0.3538901        0.0946911        0.6527516        0.4148242 
+    ##        body_pain loss_of_appetite   abdominal_pain         diarrhea 
+    ##        0.1056598        0.4562472        0.4861008        0.4758475 
+    ##         sweating  rapid_breathing        dizziness 
+    ##        0.4393114        0.6238732        0.2539692
+
+## Plots
+
+``` r
+library(ggplot2)
+
+ggplot(SymptomData, aes(x = label)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Disease Distribution", x = "Disease", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](disease_prediction_files/figure-gfm/Plots-1.png)<!-- -->
+
+``` r
+# Convert to numeric for counting
+symptom_numeric <- SymptomData %>%
+  mutate(across(-label, ~ as.numeric(as.character(.))))
+
+symptom_counts <- colSums(symptom_numeric[ , -ncol(symptom_numeric)] == 1)
+
+symptom_df <- data.frame(
+  Symptom = names(symptom_counts),
+  Count = as.numeric(symptom_counts)
+)
+
+ggplot(symptom_df, aes(x = reorder(Symptom, -Count), y = Count)) +
+  geom_bar(stat = "identity", fill = "darkorange") +
+  coord_flip() +
+  labs(title = "Symptom Frequency", x = "Symptom", y = "Count")
+```
+
+![](disease_prediction_files/figure-gfm/Plots-2.png)<!-- -->
+
+``` r
+# Example: Fever vs Disease
+ggplot(SymptomData, aes(x = label, fill = fever)) +
+  geom_bar(position = "fill") +
+  labs(title = "Proportion of Fever Presence by Disease",
+       y = "Proportion") +
+  scale_fill_manual(values = c("0" = "lightgray", "1" = "red"))
+```
+
+![](disease_prediction_files/figure-gfm/Plots-3.png)<!-- -->
+
+``` r
+# Choose a few symptoms to display
+selected_symptoms <- c("fever", "cough", "headache")
+
+SymptomData %>%
+  pivot_longer(cols = all_of(selected_symptoms), names_to = "Symptom", values_to = "Value") %>%
+  ggplot(aes(x = label, fill = Value)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ Symptom) +
+  labs(title = "Symptom Presence by Disease", y = "Proportion") +
+  scale_fill_manual(values = c("0" = "lightgray", "1" = "darkgreen"))
+```
+
+![](disease_prediction_files/figure-gfm/Plots-4.png)<!-- -->
+
+``` r
+library(tidyverse)
+
+label_col <- "label"
+
+# Convert symptom columns to numeric (keep label as factor)
+symptom_numeric <- SymptomData %>%
+  mutate(across(setdiff(names(SymptomData), label_col), ~ as.numeric(as.character(.))))
+
+# Group by label and calculate mean (proportion of '1's)
+symptom_summary <- symptom_numeric %>%
+  group_by(.data[[label_col]]) %>%
+  summarise(across(setdiff(names(symptom_numeric), label_col), mean), .groups = "drop") %>%
+  pivot_longer(-.data[[label_col]], names_to = "Symptom", values_to = "Proportion")
+
+# Heatmap
+ggplot(symptom_summary, aes(x = Symptom, y = .data[[label_col]], fill = Proportion)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "blue") +
+  labs(title = "Symptom Presence by Disease",
+       x = "Symptom",
+       y = "Disease",
+       fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](disease_prediction_files/figure-gfm/Plots-5.png)<!-- -->
