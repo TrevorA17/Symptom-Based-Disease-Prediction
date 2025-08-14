@@ -17,7 +17,11 @@ ctrl_cv <- trainControl(method = "cv", number = 10)
 print(ctrl_cv)
 
 # Logistic Regression
-model_glm <- train( label ~ .,  data = train_data, method = "glm", family = binomial, trControl = ctrl_cv )
+# Naive Bayes
+model_nb <- train( label ~ .,  data = train_data, method = "naive_bayes", trControl = ctrl_cv )
+
+# Decision Tree
+model_tree <- train( label ~ .,  data = train_data, method = "rpart", trControl = ctrl_cv )
 
 # Random Forest
 model_rf <- train( label ~ .,  data = train_data, method = "rf", trControl = ctrl_cv )
