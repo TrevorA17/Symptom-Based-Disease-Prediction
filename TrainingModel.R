@@ -25,3 +25,14 @@ model_tree <- train( label ~ .,  data = train_data, method = "rpart", trControl 
 
 # Random Forest
 model_rf <- train( label ~ .,  data = train_data, method = "rf", trControl = ctrl_cv )
+
+results <- resamples(list(
+  NaiveBayes = model_nb,
+  DecisionTree = model_tree,
+  RandomForest = model_rf
+))
+
+summary(results)
+bwplot(results)
+dotplot(results)
+
