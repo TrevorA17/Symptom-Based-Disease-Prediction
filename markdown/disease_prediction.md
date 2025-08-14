@@ -16,6 +16,11 @@ Trevor Okinda
   - [Measures of Distribution](#measures-of-distribution)
   - [Measures of Relationship](#measures-of-relationship)
   - [Plots](#plots)
+- [Training Model](#training-model)
+  - [Data Splitting](#data-splitting)
+  - [Bootstrapping](#bootstrapping)
+  - [Model Training](#model-training)
+  - [Model Resamples](#model-resamples)
 
 # Student Details
 
@@ -352,4 +357,367 @@ ggplot(symptom_summary, aes(x = Symptom, y = .data[[label_col]], fill = Proporti
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](disease_prediction_files/figure-gfm/Plots-5.png)<!-- -->
+![](disease_prediction_files/figure-gfm/Plots-5.png)<!-- --> \#
+Preprocessing and Data Transformation \## Missing Values
+
+``` r
+# Count missing values per column
+colSums(is.na(SymptomData))
+```
+
+    ##            fever            cough         headache           nausea 
+    ##                0                0                0                0 
+    ##         vomiting          fatigue      sore_throat           chills 
+    ##                0                0                0                0 
+    ##        body_pain loss_of_appetite   abdominal_pain         diarrhea 
+    ##                0                0                0                0 
+    ##         sweating  rapid_breathing        dizziness            label 
+    ##                0                0                0                0
+
+``` r
+# Total missing values in dataset
+sum(is.na(SymptomData))
+```
+
+    ## [1] 0
+
+# Training Model
+
+## Data Splitting
+
+``` r
+library(caret)
+```
+
+    ## Loading required package: lattice
+
+    ## 
+    ## Attaching package: 'caret'
+
+    ## The following objects are masked from 'package:DescTools':
+    ## 
+    ##     MAE, RMSE
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     lift
+
+``` r
+set.seed(123)  # For reproducibility
+
+# 80/20 split
+train_index <- createDataPartition(SymptomData$label, p = 0.8, list = FALSE)
+train_data <- SymptomData[train_index, ]
+test_data  <- SymptomData[-train_index, ]
+
+dim(train_index)
+```
+
+    ## [1] 3999    1
+
+``` r
+dim(train_data)
+```
+
+    ## [1] 3999   16
+
+## Bootstrapping
+
+``` r
+ctrl_boot <- trainControl(method = "boot", number = 50)  # 50 bootstrap resamples
+print(ctrl_boot)
+```
+
+    ## $method
+    ## [1] "boot"
+    ## 
+    ## $number
+    ## [1] 50
+    ## 
+    ## $repeats
+    ## [1] NA
+    ## 
+    ## $search
+    ## [1] "grid"
+    ## 
+    ## $p
+    ## [1] 0.75
+    ## 
+    ## $initialWindow
+    ## NULL
+    ## 
+    ## $horizon
+    ## [1] 1
+    ## 
+    ## $fixedWindow
+    ## [1] TRUE
+    ## 
+    ## $skip
+    ## [1] 0
+    ## 
+    ## $verboseIter
+    ## [1] FALSE
+    ## 
+    ## $returnData
+    ## [1] TRUE
+    ## 
+    ## $returnResamp
+    ## [1] "final"
+    ## 
+    ## $savePredictions
+    ## [1] FALSE
+    ## 
+    ## $classProbs
+    ## [1] FALSE
+    ## 
+    ## $summaryFunction
+    ## function (data, lev = NULL, model = NULL) 
+    ## {
+    ##     if (is.character(data$obs)) 
+    ##         data$obs <- factor(data$obs, levels = lev)
+    ##     postResample(data[, "pred"], data[, "obs"])
+    ## }
+    ## <bytecode: 0x000001300a09c9b0>
+    ## <environment: namespace:caret>
+    ## 
+    ## $selectionFunction
+    ## [1] "best"
+    ## 
+    ## $preProcOptions
+    ## $preProcOptions$thresh
+    ## [1] 0.95
+    ## 
+    ## $preProcOptions$ICAcomp
+    ## [1] 3
+    ## 
+    ## $preProcOptions$k
+    ## [1] 5
+    ## 
+    ## $preProcOptions$freqCut
+    ## [1] 19
+    ## 
+    ## $preProcOptions$uniqueCut
+    ## [1] 10
+    ## 
+    ## $preProcOptions$cutoff
+    ## [1] 0.9
+    ## 
+    ## 
+    ## $sampling
+    ## NULL
+    ## 
+    ## $index
+    ## NULL
+    ## 
+    ## $indexOut
+    ## NULL
+    ## 
+    ## $indexFinal
+    ## NULL
+    ## 
+    ## $timingSamps
+    ## [1] 0
+    ## 
+    ## $predictionBounds
+    ## [1] FALSE FALSE
+    ## 
+    ## $seeds
+    ## [1] NA
+    ## 
+    ## $adaptive
+    ## $adaptive$min
+    ## [1] 5
+    ## 
+    ## $adaptive$alpha
+    ## [1] 0.05
+    ## 
+    ## $adaptive$method
+    ## [1] "gls"
+    ## 
+    ## $adaptive$complete
+    ## [1] TRUE
+    ## 
+    ## 
+    ## $trim
+    ## [1] FALSE
+    ## 
+    ## $allowParallel
+    ## [1] TRUE
+
+``` r
+ctrl_cv <- trainControl(method = "cv", number = 10)
+print(ctrl_cv)
+```
+
+    ## $method
+    ## [1] "cv"
+    ## 
+    ## $number
+    ## [1] 10
+    ## 
+    ## $repeats
+    ## [1] NA
+    ## 
+    ## $search
+    ## [1] "grid"
+    ## 
+    ## $p
+    ## [1] 0.75
+    ## 
+    ## $initialWindow
+    ## NULL
+    ## 
+    ## $horizon
+    ## [1] 1
+    ## 
+    ## $fixedWindow
+    ## [1] TRUE
+    ## 
+    ## $skip
+    ## [1] 0
+    ## 
+    ## $verboseIter
+    ## [1] FALSE
+    ## 
+    ## $returnData
+    ## [1] TRUE
+    ## 
+    ## $returnResamp
+    ## [1] "final"
+    ## 
+    ## $savePredictions
+    ## [1] FALSE
+    ## 
+    ## $classProbs
+    ## [1] FALSE
+    ## 
+    ## $summaryFunction
+    ## function (data, lev = NULL, model = NULL) 
+    ## {
+    ##     if (is.character(data$obs)) 
+    ##         data$obs <- factor(data$obs, levels = lev)
+    ##     postResample(data[, "pred"], data[, "obs"])
+    ## }
+    ## <bytecode: 0x000001300a09c9b0>
+    ## <environment: namespace:caret>
+    ## 
+    ## $selectionFunction
+    ## [1] "best"
+    ## 
+    ## $preProcOptions
+    ## $preProcOptions$thresh
+    ## [1] 0.95
+    ## 
+    ## $preProcOptions$ICAcomp
+    ## [1] 3
+    ## 
+    ## $preProcOptions$k
+    ## [1] 5
+    ## 
+    ## $preProcOptions$freqCut
+    ## [1] 19
+    ## 
+    ## $preProcOptions$uniqueCut
+    ## [1] 10
+    ## 
+    ## $preProcOptions$cutoff
+    ## [1] 0.9
+    ## 
+    ## 
+    ## $sampling
+    ## NULL
+    ## 
+    ## $index
+    ## NULL
+    ## 
+    ## $indexOut
+    ## NULL
+    ## 
+    ## $indexFinal
+    ## NULL
+    ## 
+    ## $timingSamps
+    ## [1] 0
+    ## 
+    ## $predictionBounds
+    ## [1] FALSE FALSE
+    ## 
+    ## $seeds
+    ## [1] NA
+    ## 
+    ## $adaptive
+    ## $adaptive$min
+    ## [1] 5
+    ## 
+    ## $adaptive$alpha
+    ## [1] 0.05
+    ## 
+    ## $adaptive$method
+    ## [1] "gls"
+    ## 
+    ## $adaptive$complete
+    ## [1] TRUE
+    ## 
+    ## 
+    ## $trim
+    ## [1] FALSE
+    ## 
+    ## $allowParallel
+    ## [1] TRUE
+
+## Model Training
+
+``` r
+# Logistic Regression
+# Naive Bayes
+model_nb <- train( label ~ .,  data = train_data, method = "naive_bayes", trControl = ctrl_cv )
+
+# Decision Tree
+model_tree <- train( label ~ .,  data = train_data, method = "rpart", trControl = ctrl_cv )
+
+# Random Forest
+model_rf <- train( label ~ .,  data = train_data, method = "rf", trControl = ctrl_cv )
+```
+
+## Model Resamples
+
+``` r
+results <- resamples(list(
+  NaiveBayes = model_nb,
+  DecisionTree = model_tree,
+  RandomForest = model_rf
+))
+
+summary(results)
+```
+
+    ## 
+    ## Call:
+    ## summary.resamples(object = results)
+    ## 
+    ## Models: NaiveBayes, DecisionTree, RandomForest 
+    ## Number of resamples: 10 
+    ## 
+    ## Accuracy 
+    ##                   Min.   1st Qu.    Median      Mean   3rd Qu.  Max. NA's
+    ## NaiveBayes   0.8800000 0.8847838 0.8876403 0.8892198 0.8918750 0.905    0
+    ## DecisionTree 0.6641604 0.6925423 0.7078709 0.7026540 0.7145542 0.730    0
+    ## RandomForest 0.8671679 0.8705498 0.8801496 0.8854690 0.8923743 0.920    0
+    ## 
+    ## Kappa 
+    ##                   Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## NaiveBayes   0.8199938 0.8271763 0.8314578 0.8338303 0.8378004 0.8575232    0
+    ## DecisionTree 0.4962406 0.5388587 0.5618647 0.5539850 0.5717565 0.5948569    0
+    ## RandomForest 0.8007519 0.8058196 0.8202250 0.8282006 0.8385632 0.8799947    0
+
+``` r
+bwplot(results)
+```
+
+![](disease_prediction_files/figure-gfm/resamples-1.png)<!-- -->
+
+``` r
+dotplot(results)
+```
+
+![](disease_prediction_files/figure-gfm/resamples-2.png)<!-- -->
