@@ -196,6 +196,18 @@ ggplot(symptom_summary, aes(x = Symptom, y = .data[[label_col]], fill = Proporti
 
 
 ```
+# Preprocessing and Data Transformation
+## Missing Values
+```{r Missing Values}
+# Count missing values per column
+colSums(is.na(SymptomData))
+
+# Total missing values in dataset
+sum(is.na(SymptomData))
+```
+
+
+
 
 
 
