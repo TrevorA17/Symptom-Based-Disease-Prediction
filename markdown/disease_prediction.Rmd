@@ -255,6 +255,15 @@ dotplot(results)
 ```
 ## Saving Model
 ```{r Saving Model}
+# Ensure the 'models' directory exists
+if (!dir.exists("./models")) {
+  dir.create("./models", recursive = TRUE)
+}
+
+# Save the best model (Naive Bayes) to a file
+repo_path <- dirname(rstudioapi::getActiveDocumentContext()$path)
+saveRDS(model_nb, file.path(repo_path, "models", "saved_nb_model.rds"))
+
 # Load the saved Naive Bayes model (when needed)
 loaded_nb_model <- readRDS(file.path(repo_path, "models", "saved_nb_model.rds"))
 
