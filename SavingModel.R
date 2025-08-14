@@ -4,7 +4,8 @@ if (!dir.exists("./models")) {
 }
 
 # Save the best model (Naive Bayes) to a file
-saveRDS(model_nb, "./models/saved_nb_model.rds")
+repo_path <- dirname(rstudioapi::getActiveDocumentContext()$path)
+saveRDS(model_nb, file.path(repo_path, "models", "saved_nb_model.rds"))
 
 # Load the saved Naive Bayes model (when needed)
 loaded_nb_model <- readRDS("./models/saved_nb_model.rds")
