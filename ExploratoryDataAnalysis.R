@@ -117,10 +117,11 @@ symptom_summary <- symptom_numeric %>%
 # Heatmap
 ggplot(symptom_summary, aes(x = Symptom, y = .data[[label_col]], fill = Proportion)) +
   geom_tile(color = "white") +
-  scale_fill_gradient(low = "white", high = "red") +
+  scale_fill_gradient(low = "white", high = "blue") +
   labs(title = "Symptom Presence by Disease",
        x = "Symptom",
        y = "Disease",
        fill = "Proportion") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
